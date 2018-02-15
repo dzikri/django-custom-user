@@ -1,21 +1,13 @@
 from django import forms
-from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserChangeForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, ReadOnlyPasswordHashField, UserChangeForm, UserCreationForm
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from .models import User
 
-class LoginForm(forms.Form):
-    username = forms.CharField(label='Логін', required=True)
-    password = forms.CharField(label='Пароль', widget=forms.PasswordInput)
-
-    def clean_username(self):
-        username = self.cleaned_data.get('username')
-        try:
-            User.objects.get(username=username)
-        except ObjectDoesNotExist:
-            raise ValidationError('Невірний логін. Спробуйте ще раз...')
-        return username
+class UserLoginForm(AuthenticationForm):
+    username = forms.CharField(label=_('Username:'), required=True)
+    password = forms.CharField(label=_('Password:'), widget=forms.PasswordInput)
 
     def clean_password(self):
         username = self.cleaned_data.get('username')
@@ -27,9 +19,17 @@ class LoginForm(forms.Form):
                 valid = False
         except ObjectDoesNotExist:
             valid = False
-        # if not valid: raise ValidationError('Невірні дані логування. Спробуйте ще раз...')
-        if not valid: raise ValidationError('Невірний пароль. Спробуйте ще раз...')
+        if not valid: raise ValidationError(_('Wrong password. Try again...'))
         return password
+
+
+    def confirm_login_allowed(self, user):
+
+        if not user.is_active:
+            raise forms.ValidationError(
+                self.error_messages['inactive'],
+                code='inactive',
+            )
 
 
 class CreateUserForm(forms.ModelForm):
