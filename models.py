@@ -67,18 +67,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     def is_superuser(self):
         return self.admin
 
-    # def has_perm(self,perm, obj=None):
-    #     if self.is_admin and self.is_staff:
-    #         return True
-    #     return False
+    def has_perm(self,perm, obj=None):
+        if self.is_admin and self.is_staff:
+            return True
+        return False
 
     def has_module_perms(self,app_label):
         return True
-
-    def send_email(self,subject,message,**kwargs):
-        if not self.email:
-            raise ValueError(_('Email is not specified for '),self.username)
-        send_mail(subject,message,settings.EMAIL_HOST_USER,[self,email],**kwargs)
 
     def __str__(self):
         return self.username

@@ -1,39 +1,33 @@
 from django.contrib import admin
+from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth import get_user_model
-from django.utils.translation import ugettext, ugettext_lazy as _
 
-from .forms import CreateUserForm, ChangeUserForm
+from .models import User
+from .forms import UserChangeForm, UserCreationForm
 
-User = get_user_model()
+class UserAdminForm(BaseUserAdmin):
 
-class UserAdmin(BaseUserAdmin):
-    form = ChangeUserForm
-    add_form = CreateUserForm
+    form = UserChangeForm
+    add_form = UserCreationForm
 
-    # The fields to be used in displaying the User model.
-    # These override the definitions on the base UserAdmin
-    # that reference specific fields on auth.User.
-    list_display = ('username','staff','admin')
-    list_filter = ('active','staff','admin')
+    list_display = ('username','email','active','admin')
+    list_filter = ('active','admin')
     fieldsets = (
-        (None, {'fields': ('username','password')}),
-        ('Personal info',{'fields':('email',)}),
-        ('Permissions', {'fields': ('active','staff','admin')})
+        ('Personal info', {'fields': ('username','email',)}),
+        ('Password', {'fields': ('password',)}),
+        ('Permissions', {'fields': ('staff','active','admin',)}),
     )
-    # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
-    # overrides get_fieldsets to use this attribute when creating a user.
+
     add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username','password')}
-        ),
-        ('Personal info',{'fields':('email',)}),
-        ('Permissions', {'fields': ('active','staff','admin')})
+        ('Personal info', {'fields': ('username','email',)}),
+        ('Password', {'fields': ('password1', 'password2',)}),
+        ('Permissions', {'fields': ('staff', 'active', 'admin',)}),
     )
-    search_fields = ('username','email')
-    ordering = ('username',)
+
+    search_fields = ('username','email',)
+    ordering = ('username','email',)
     filter_horizontal = ()
 
 
-admin.site.register(User,UserAdmin)
+# Registering User model
+admin.site.register(User, UserAdminForm)
